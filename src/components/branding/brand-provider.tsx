@@ -8,6 +8,9 @@ const BrandContext = createContext({
   contactEmail: "hello@aaracreations.com",
   privacyUrl: "/privacy",
   termsUrl: "/terms",
+  primaryColor: "#6541dc",
+  logoData: "",
+  faviconData: "",
 });
 
 export function BrandProvider({
@@ -16,6 +19,9 @@ export function BrandProvider({
   contactEmail,
   privacyUrl,
   termsUrl,
+  primaryColor,
+  logoData,
+  faviconData,
   children,
 }: {
   productName: string;
@@ -24,10 +30,22 @@ export function BrandProvider({
   privacyUrl: string;
   termsUrl: string;
   children: React.ReactNode;
+  primaryColor: string;
+  logoData: string;
+  faviconData: string;
 }) {
   return (
     <BrandContext.Provider
-      value={{ productName, companyName, contactEmail, privacyUrl, termsUrl }}
+      value={{
+        productName,
+        companyName,
+        contactEmail,
+        privacyUrl,
+        termsUrl,
+        primaryColor,
+        logoData,
+        faviconData,
+      }}
     >
       {children}
     </BrandContext.Provider>

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -11,8 +12,29 @@ const brandDefaults = {
   contactEmail: "hello@aaracreations.com",
   privacyUrl: "/privacy",
   termsUrl: "/terms",
+  primaryColor: "#6541dc",
+  logoData: "",
+  faviconData: "",
 };
 
+
+type BrandStyle = CSSProperties & {
+  "--brand-primary": string;
+  "--brand-primary-foreground": string;
+};
+
+function getBrandStyle(value: string): BrandStyle {
+  const color = /^#[0-9a-f]{6}$/i.test(value) ? value : "#6541dc";
+  const red = Number.parseInt(color.slice(1, 3), 16);
+  const green = Number.parseInt(color.slice(3, 5), 16);
+  const blue = Number.parseInt(color.slice(5, 7), 16);
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
+
+  return {
+    "--brand-primary": color,
+    "--brand-primary-foreground": luminance > 150 ? "#171326" : "#ffffff",
+  };
+}
 async function getBrandSettings() {
   const brand = { ...brandDefaults };
   try {
@@ -25,6 +47,9 @@ async function getBrandSettings() {
             "branding.contactEmail",
             "branding.privacyUrl",
             "branding.termsUrl",
+            "branding.primaryColor",
+            "branding.logoData",
+            "branding.faviconData",
           ],
         },
         encrypted: false,
@@ -41,7 +66,7 @@ async function getBrandSettings() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { productName } = await getBrandSettings();
+  const { productName, faviconData } = await getBrandSettings();
   const description =
     "Write thoughtful, professional responses to customer reviews in seconds.";
   return {
@@ -54,6 +79,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     openGraph: { title: productName, description, type: "website" },
+    icons: faviconData ? { icon: faviconData, shortcut: faviconData } : undefined,
     twitter: { card: "summary_large_image" },
   };
 }
@@ -63,7 +89,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const brand = await getBrandSettings();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning style={getBrandStyle(brand.primaryColor)}>
       <body>
         <BrandProvider {...brand}>
           <ThemeProvider>

@@ -1,10 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useBrand } from "./brand-provider";
 
 export function LogoMark({ className }: { className?: string }) {
+  const { logoData } = useBrand();
+  if (logoData) {
+    return (
+      <Image
+        src={logoData}
+        alt=""
+        width={40}
+        height={40}
+        unoptimized
+        className={cn("size-9 rounded-xl object-contain", className)}
+      />
+    );
+  }
+
   return (
     <svg
       aria-hidden="true"
