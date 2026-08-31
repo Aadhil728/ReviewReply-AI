@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { AdminNotice } from "@/components/admin/admin-notice";
+import { BrandImageField } from "@/components/admin/brand-image-field";
+import { BrandColorField } from "@/components/admin/brand-color-field";
 import { recordAdminAction } from "@/lib/admin-audit";
 import { aiProvider } from "@/lib/ai/provider";
 import { testEmailConnection } from "@/lib/email";
@@ -21,6 +23,9 @@ const fields = [
   ],
   ["branding.privacyUrl", "branding", "Privacy URL", "/privacy", false],
   ["branding.termsUrl", "branding", "Terms URL", "/terms", false],
+  ["branding.primaryColor", "branding", "Primary color", "#6541dc", false],
+  ["branding.logoData", "branding", "Product logo", "", false],
+  ["branding.faviconData", "branding", "Browser favicon", "", false],
   ["ai.baseUrl", "ai", "AI base URL", "https://api.openai.com/v1", false],
   ["ai.model", "ai", "AI model", "gpt-5-mini", false],
   ["ai.apiKey", "ai", "AI API key", "Leave blank to keep the saved key", true],
@@ -108,15 +113,25 @@ const fields = [
   ["email.fromAddress", "email", "Sender email", "noreply@example.com", false],
 ] as const;
 
+const brandColorSchema = z.string().regex(/^#[0-9a-f]{6}$/i);
+const brandImageSchema = z
+  .string()
+  .max(400_000)
+  .refine(
+    (value) =>
+      !value || /^data:image\/(?:png|jpeg|webp|x-icon|vnd\.microsoft\.icon);base64,/i.test(value),
+  );
+
 async function saveConfiguration(formData: FormData) {
   "use server";
   const session = await requireAdmin();
   for (const [key, group, , , secret] of fields) {
-    const value = z
-      .string()
-      .trim()
-      .max(500)
-      .parse(formData.get(key) ?? "");
+    const rawValue = z.string().parse(formData.get(key) ?? "");
+    const value = key === "branding.primaryColor"
+      ? brandColorSchema.parse(rawValue)
+      : key === "branding.logoData" || key === "branding.faviconData"
+        ? brandImageSchema.parse(rawValue)
+        : z.string().trim().max(500).parse(rawValue);
     if (secret && !value) continue;
     await setSystemSetting(key, group, value);
   }
@@ -127,6 +142,7 @@ async function saveConfiguration(formData: FormData) {
     metadata: { keys: fields.map(([key]) => key) },
   });
   revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
   redirect("/admin/settings?notice=Configuration saved successfully.");
 }
 
@@ -247,11 +263,34 @@ export default async function AdminSettingsPage({
         </p>
       </div>
       <AdminNotice notice={params.notice} error={params.error} />
-      <form action={saveConfiguration} className="mt-8 max-w-5xl space-y-5">
+      <form
+        action={saveConfiguration}
+        className="mt-8 grid max-w-7xl gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start"
+      >
+        <aside className="overflow-x-auto rounded-2xl border bg-card p-3 lg:sticky lg:top-24">
+
+          <nav className="flex min-w-max gap-1 lg:min-w-0 lg:flex-col" aria-label="Configuration groups">
+            {groups.map((group) => (
+              <a
+                key={group.id}
+                href={`#${group.id}`}
+                className="rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-accent hover:text-primary"
+              >
+                {group.title}
+              </a>
+            ))}
+            <a
+              href="#connection-tests"
+              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-accent hover:text-primary"
+            >Connection tests</a>
+          </nav>
+        </aside>
+        <div className="min-w-0 space-y-5">
         {groups.map((group) => (
           <section
             key={group.id}
-            className="rounded-2xl border bg-card p-5 sm:p-6"
+            id={group.id}
+            className="scroll-mt-24 rounded-2xl border bg-card p-5 sm:p-6"
           >
             <div className="border-b pb-4">
               <h2 className="font-bold">{group.title}</h2>
@@ -262,6 +301,32 @@ export default async function AdminSettingsPage({
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
               {group.fields.map(([key, , label, placeholder, secret]) => {
                 const setting = byKey.get(key);
+                if (key === "branding.logoData" || key === "branding.faviconData") {
+                  const isFavicon = key === "branding.faviconData";
+                  return (
+                    <div key={key} className="sm:col-span-2">
+                      <BrandImageField
+                        name={key}
+                        label={label}
+                        value={setting?.value ?? ""}
+                        help={
+                          isFavicon
+                            ? "Use a square PNG, ICO, or WebP up to 64 KB."
+                            : "Use a transparent PNG or WebP up to 256 KB."
+                        }
+                        maxBytes={isFavicon ? 64 * 1024 : 256 * 1024}
+                      />
+                    </div>
+                  );
+                }
+                if (key === "branding.primaryColor") {
+                  const color = /^#[0-9a-f]{6}$/i.test(setting?.value ?? "")
+                    ? (setting?.value ?? "#6541dc")
+                    : "#6541dc";
+                  return (
+                    <BrandColorField key={key} name={key} label={label} value={color} />
+                  );
+                }
                 if (key === "bank.enabled") {
                   const enabled = setting?.value === "true";
                   return (
@@ -320,10 +385,12 @@ export default async function AdminSettingsPage({
         <div className="sticky bottom-4 flex items-center justify-end rounded-2xl border bg-card/95 p-4 shadow-lg backdrop-blur">
           <Button type="submit">Save all configuration</Button>
         </div>
+        </div>
       </form>
+      <div id="connection-tests" className="scroll-mt-24 max-w-7xl space-y-4 lg:pl-[244px]">
       <form
         action={testAI}
-        className="mt-4 max-w-5xl rounded-2xl border bg-card p-5 sm:p-6"
+        className="rounded-2xl border bg-card p-5 sm:p-6"
       >
         <h2 className="font-bold">Connection test</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -336,7 +403,7 @@ export default async function AdminSettingsPage({
       </form>
       <form
         action={testEmail}
-        className="mt-4 max-w-5xl rounded-2xl border bg-card p-5 sm:p-6"
+        className="rounded-2xl border bg-card p-5 sm:p-6"
       >
         <h2 className="font-bold">Email test</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -347,6 +414,7 @@ export default async function AdminSettingsPage({
           Send test email
         </Button>
       </form>
+      </div>
     </>
   );
 }
