@@ -119,7 +119,10 @@ const brandImageSchema = z
   .max(400_000)
   .refine(
     (value) =>
-      !value || /^data:image\/(?:png|jpeg|webp|x-icon|vnd\.microsoft\.icon);base64,/i.test(value),
+      !value ||
+      /^data:image\/(?:png|jpeg|webp|x-icon|vnd\.microsoft\.icon);base64,/i.test(
+        value,
+      ),
   );
 
 async function saveConfiguration(formData: FormData) {
@@ -127,11 +130,12 @@ async function saveConfiguration(formData: FormData) {
   const session = await requireAdmin();
   for (const [key, group, , , secret] of fields) {
     const rawValue = z.string().parse(formData.get(key) ?? "");
-    const value = key === "branding.primaryColor"
-      ? brandColorSchema.parse(rawValue)
-      : key === "branding.logoData" || key === "branding.faviconData"
-        ? brandImageSchema.parse(rawValue)
-        : z.string().trim().max(500).parse(rawValue);
+    const value =
+      key === "branding.primaryColor"
+        ? brandColorSchema.parse(rawValue)
+        : key === "branding.logoData" || key === "branding.faviconData"
+          ? brandImageSchema.parse(rawValue)
+          : z.string().trim().max(500).parse(rawValue);
     if (secret && !value) continue;
     await setSystemSetting(key, group, value);
   }
@@ -268,8 +272,10 @@ export default async function AdminSettingsPage({
         className="mt-8 grid max-w-7xl gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start"
       >
         <aside className="overflow-x-auto rounded-2xl border bg-card p-3 lg:sticky lg:top-24">
-
-          <nav className="flex min-w-max gap-1 lg:min-w-0 lg:flex-col" aria-label="Configuration groups">
+          <nav
+            className="flex min-w-max gap-1 lg:min-w-0 lg:flex-col"
+            aria-label="Configuration groups"
+          >
             {groups.map((group) => (
               <a
                 key={group.id}
@@ -282,138 +288,151 @@ export default async function AdminSettingsPage({
             <a
               href="#connection-tests"
               className="rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-accent hover:text-primary"
-            >Connection tests</a>
+            >
+              Connection tests
+            </a>
           </nav>
         </aside>
         <div className="min-w-0 space-y-5">
-        {groups.map((group) => (
-          <section
-            key={group.id}
-            id={group.id}
-            className="scroll-mt-24 rounded-2xl border bg-card p-5 sm:p-6"
-          >
-            <div className="border-b pb-4">
-              <h2 className="font-bold">{group.title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {group.description}
-              </p>
-            </div>
-            <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              {group.fields.map(([key, , label, placeholder, secret]) => {
-                const setting = byKey.get(key);
-                if (key === "branding.logoData" || key === "branding.faviconData") {
-                  const isFavicon = key === "branding.faviconData";
-                  return (
-                    <div key={key} className="sm:col-span-2">
-                      <BrandImageField
+          {groups.map((group) => (
+            <section
+              key={group.id}
+              id={group.id}
+              className="scroll-mt-24 rounded-2xl border bg-card p-5 sm:p-6"
+            >
+              <div className="border-b pb-4">
+                <h2 className="font-bold">{group.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {group.description}
+                </p>
+              </div>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                {group.fields.map(([key, , label, placeholder, secret]) => {
+                  const setting = byKey.get(key);
+                  if (
+                    key === "branding.logoData" ||
+                    key === "branding.faviconData"
+                  ) {
+                    const isFavicon = key === "branding.faviconData";
+                    return (
+                      <div key={key} className="sm:col-span-2">
+                        <BrandImageField
+                          name={key}
+                          label={label}
+                          value={setting?.value ?? ""}
+                          help={
+                            isFavicon
+                              ? "Use a square PNG, ICO, or WebP up to 64 KB."
+                              : "Use a transparent PNG or WebP up to 256 KB."
+                          }
+                          maxBytes={isFavicon ? 64 * 1024 : 256 * 1024}
+                        />
+                      </div>
+                    );
+                  }
+                  if (key === "branding.primaryColor") {
+                    const color = /^#[0-9a-f]{6}$/i.test(setting?.value ?? "")
+                      ? (setting?.value ?? "#6541dc")
+                      : "#6541dc";
+                    return (
+                      <BrandColorField
+                        key={key}
                         name={key}
                         label={label}
-                        value={setting?.value ?? ""}
-                        help={
-                          isFavicon
-                            ? "Use a square PNG, ICO, or WebP up to 64 KB."
-                            : "Use a transparent PNG or WebP up to 256 KB."
-                        }
-                        maxBytes={isFavicon ? 64 * 1024 : 256 * 1024}
+                        value={color}
                       />
-                    </div>
-                  );
-                }
-                if (key === "branding.primaryColor") {
-                  const color = /^#[0-9a-f]{6}$/i.test(setting?.value ?? "")
-                    ? (setting?.value ?? "#6541dc")
-                    : "#6541dc";
+                    );
+                  }
+                  if (key === "bank.enabled") {
+                    const enabled = setting?.value === "true";
+                    return (
+                      <fieldset key={key} className="sm:col-span-2">
+                        <legend className="text-sm font-semibold">
+                          {label}
+                        </legend>
+                        <div className="mt-2 inline-grid grid-cols-2 rounded-xl border bg-background p-1">
+                          <label className="cursor-pointer rounded-lg px-5 py-2 text-center text-sm font-semibold text-muted-foreground transition has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:shadow-sm">
+                            <input
+                              className="sr-only"
+                              type="radio"
+                              name={key}
+                              value="true"
+                              defaultChecked={enabled}
+                            />
+                            Enabled
+                          </label>
+                          <label className="cursor-pointer rounded-lg px-5 py-2 text-center text-sm font-semibold text-muted-foreground transition has-[:checked]:bg-muted has-[:checked]:text-foreground">
+                            <input
+                              className="sr-only"
+                              type="radio"
+                              name={key}
+                              value="false"
+                              defaultChecked={!enabled}
+                            />
+                            Disabled
+                          </label>
+                        </div>
+                        <p className="mt-2 text-xs font-normal text-muted-foreground">
+                          When enabled, customers can submit transfers for
+                          manual administrator approval.
+                        </p>
+                      </fieldset>
+                    );
+                  }
                   return (
-                    <BrandColorField key={key} name={key} label={label} value={color} />
+                    <label key={key} className="text-sm font-semibold">
+                      {label}
+                      {secret && setting?.configured && (
+                        <span className="ml-2 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
+                          Configured
+                        </span>
+                      )}
+                      <input
+                        name={key}
+                        type={secret ? "password" : "text"}
+                        defaultValue={secret ? "" : (setting?.value ?? "")}
+                        placeholder={placeholder}
+                        autoComplete="off"
+                        className="mt-2 h-11 w-full rounded-xl border bg-background px-3 font-normal outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </label>
                   );
-                }
-                if (key === "bank.enabled") {
-                  const enabled = setting?.value === "true";
-                  return (
-                    <fieldset key={key} className="sm:col-span-2">
-                      <legend className="text-sm font-semibold">{label}</legend>
-                      <div className="mt-2 inline-grid grid-cols-2 rounded-xl border bg-background p-1">
-                        <label className="cursor-pointer rounded-lg px-5 py-2 text-center text-sm font-semibold text-muted-foreground transition has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:shadow-sm">
-                          <input
-                            className="sr-only"
-                            type="radio"
-                            name={key}
-                            value="true"
-                            defaultChecked={enabled}
-                          />
-                          Enabled
-                        </label>
-                        <label className="cursor-pointer rounded-lg px-5 py-2 text-center text-sm font-semibold text-muted-foreground transition has-[:checked]:bg-muted has-[:checked]:text-foreground">
-                          <input
-                            className="sr-only"
-                            type="radio"
-                            name={key}
-                            value="false"
-                            defaultChecked={!enabled}
-                          />
-                          Disabled
-                        </label>
-                      </div>
-                      <p className="mt-2 text-xs font-normal text-muted-foreground">
-                        When enabled, customers can submit transfers for manual administrator approval.
-                      </p>
-                    </fieldset>
-                  );
-                }
-                return (
-                  <label key={key} className="text-sm font-semibold">
-                    {label}
-                    {secret && setting?.configured && (
-                      <span className="ml-2 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
-                        Configured
-                      </span>
-                    )}
-                    <input
-                      name={key}
-                      type={secret ? "password" : "text"}
-                      defaultValue={secret ? "" : (setting?.value ?? "")}
-                      placeholder={placeholder}
-                      autoComplete="off"
-                      className="mt-2 h-11 w-full rounded-xl border bg-background px-3 font-normal outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </label>
-                );
-              })}
-            </div>
-          </section>
-        ))}
-        <div className="sticky bottom-4 flex items-center justify-end rounded-2xl border bg-card/95 p-4 shadow-lg backdrop-blur">
-          <Button type="submit">Save all configuration</Button>
-        </div>
+                })}
+              </div>
+            </section>
+          ))}
+          <div className="sticky bottom-4 flex items-center justify-end rounded-2xl border bg-card/95 p-4 shadow-lg backdrop-blur">
+            <Button type="submit">Save all configuration</Button>
+          </div>
         </div>
       </form>
-      <div id="connection-tests" className="scroll-mt-24 max-w-7xl space-y-4 lg:pl-[244px]">
-      <form
-        action={testAI}
-        className="rounded-2xl border bg-card p-5 sm:p-6"
+      <div
+        id="connection-tests"
+        className="scroll-mt-24 max-w-7xl space-y-4 lg:pl-[244px]"
       >
-        <h2 className="font-bold">Connection test</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Save the AI section first, then verify the provider can answer a
-          minimal request.
-        </p>
-        <Button variant="secondary" type="submit">
-          Test AI connection
-        </Button>
-      </form>
-      <form
-        action={testEmail}
-        className="rounded-2xl border bg-card p-5 sm:p-6"
-      >
-        <h2 className="font-bold">Email test</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Save the transactional email section first. The test is sent to your
-          administrator email address.
-        </p>
-        <Button className="mt-4" variant="secondary" type="submit">
-          Send test email
-        </Button>
-      </form>
+        <form action={testAI} className="rounded-2xl border bg-card p-5 sm:p-6">
+          <h2 className="font-bold">Connection test</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Save the AI section first, then verify the provider can answer a
+            minimal request.
+          </p>
+          <Button variant="secondary" type="submit">
+            Test AI connection
+          </Button>
+        </form>
+        <form
+          action={testEmail}
+          className="rounded-2xl border bg-card p-5 sm:p-6"
+        >
+          <h2 className="font-bold">Email test</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Save the transactional email section first. The test is sent to your
+            administrator email address.
+          </p>
+          <Button className="mt-4" variant="secondary" type="submit">
+            Send test email
+          </Button>
+        </form>
       </div>
     </>
   );

@@ -17,7 +17,6 @@ const brandDefaults = {
   faviconData: "",
 };
 
-
 type BrandStyle = CSSProperties & {
   "--brand-primary": string;
   "--brand-primary-foreground": string;
@@ -79,7 +78,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     openGraph: { title: productName, description, type: "website" },
-    icons: faviconData ? { icon: faviconData, shortcut: faviconData } : undefined,
+    icons: faviconData
+      ? { icon: faviconData, shortcut: faviconData }
+      : undefined,
     twitter: { card: "summary_large_image" },
   };
 }
@@ -89,7 +90,11 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const brand = await getBrandSettings();
   return (
-    <html lang="en" suppressHydrationWarning style={getBrandStyle(brand.primaryColor)}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      style={getBrandStyle(brand.primaryColor)}
+    >
       <body>
         <BrandProvider {...brand}>
           <ThemeProvider>

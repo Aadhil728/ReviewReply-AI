@@ -81,9 +81,10 @@ This checklist follows the phased delivery order in the product brief. A phase i
 - [x] Agency multi-business profiles with atomic plan-limit enforcement and generator selection
 - [x] Dedicated customer upgrade page and administrator-verified manual bank-transfer subscriptions
 - [x] CodeCanyon packaging script, production environment template, changelog, support/upgrade notes, and public-ready HTML documentation
-- [x] Desktop/mobile Playwright smoke-suite foundation with optional authenticated coverage
+- [x] Desktop/mobile Playwright coverage for public, authentication, customer, administrator, installer, branding, and bank-transfer visibility flows
+- [x] GitHub Actions Linux pipeline with PostgreSQL migrations, isolated E2E accounts, quality/build gates, Chromium execution, and failure artifacts
 - [ ] Verify Stripe test mode and PayPal Sandbox with real buyer credentials
-- [ ] Add full integration and browser E2E suites, Linux clean-install CI, accessibility audit, and multi-viewport visual QA
+- [ ] Add usage-concurrency and provider-billing integration coverage, Linux clean-install packaging CI, accessibility audit, and multi-viewport visual QA
 - [ ] Create and deploy the restricted live demo, scheduled demo reset, preview images, screenshots, and marketplace listing assets
 - [ ] Complete dependency security and exact license review immediately before release
 

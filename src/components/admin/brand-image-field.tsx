@@ -24,12 +24,22 @@ export function BrandImageField({
 
   function select(file?: File) {
     if (!file) return;
-    if (!['image/png', 'image/jpeg', 'image/webp', 'image/x-icon', 'image/vnd.microsoft.icon'].includes(file.type)) {
+    if (
+      ![
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+        "image/x-icon",
+        "image/vnd.microsoft.icon",
+      ].includes(file.type)
+    ) {
       toast.error("Use a PNG, JPG, WebP, or ICO image.");
       return;
     }
     if (file.size > maxBytes) {
-      toast.error(`The image must be smaller than ${Math.round(maxBytes / 1024)} KB.`);
+      toast.error(
+        `The image must be smaller than ${Math.round(maxBytes / 1024)} KB.`,
+      );
       return;
     }
     const reader = new FileReader();
@@ -58,11 +68,36 @@ export function BrandImageField({
           )}
         </span>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" variant="secondary" onClick={() => inputRef.current?.click()}>{image ? "Replace image" : "Choose image"}</Button>
-          {image ? <Button type="button" size="sm" variant="ghost" onClick={() => { setImage(""); if (inputRef.current) inputRef.current.value = ""; }}><Trash2 className="size-4" /> Remove</Button> : null}
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => inputRef.current?.click()}
+          >
+            {image ? "Replace image" : "Choose image"}
+          </Button>
+          {image ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setImage("");
+                if (inputRef.current) inputRef.current.value = "";
+              }}
+            >
+              <Trash2 className="size-4" /> Remove
+            </Button>
+          ) : null}
         </div>
       </div>
-      <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon,.ico" className="sr-only" onChange={(event) => select(event.target.files?.[0])} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon,.ico"
+        className="sr-only"
+        onChange={(event) => select(event.target.files?.[0])}
+      />
     </div>
   );
 }

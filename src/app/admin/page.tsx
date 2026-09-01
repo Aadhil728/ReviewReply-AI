@@ -148,7 +148,10 @@ export default async function AdminOverview() {
         </span>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
+      <section
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        aria-label="Key metrics"
+      >
         {metrics.map(({ label, value, detail, href, icon: Icon }) => (
           <Link
             key={label}
@@ -161,14 +164,19 @@ export default async function AdminOverview() {
               </span>
               <ArrowUpRight className="size-4 text-muted-foreground transition group-hover:text-primary" />
             </div>
-            <p className="mt-5 text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="mt-5 text-sm font-medium text-muted-foreground">
+              {label}
+            </p>
             <p className="mt-1 text-3xl font-bold tracking-tight">{value}</p>
             <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
           </Link>
         ))}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-12" aria-label="Administration shortcuts">
+      <section
+        className="grid gap-4 lg:grid-cols-12"
+        aria-label="Administration shortcuts"
+      >
         <div className="rounded-2xl border bg-card p-5 sm:p-6 lg:col-span-8">
           <div>
             <p className="text-lg font-bold">Quick management</p>
@@ -188,7 +196,9 @@ export default async function AdminOverview() {
                 </span>
                 <span className="min-w-0">
                   <span className="block font-semibold">{label}</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">{description}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {description}
+                  </span>
                 </span>
                 <ArrowUpRight className="ml-auto size-4 shrink-0 text-muted-foreground group-hover:text-primary" />
               </Link>
@@ -208,10 +218,20 @@ export default async function AdminOverview() {
             >
               <Webhook className="size-5 text-muted-foreground" />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">Failed webhooks</span>
-                <span className="block text-xs text-muted-foreground">Retry or inspect delivery errors</span>
+                <span className="block text-sm font-semibold">
+                  Failed webhooks
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Retry or inspect delivery errors
+                </span>
               </span>
-              <strong className={failedWebhooks > 0 ? "text-destructive" : "text-success"}>{failedWebhooks}</strong>
+              <strong
+                className={
+                  failedWebhooks > 0 ? "text-destructive" : "text-success"
+                }
+              >
+                {failedWebhooks}
+              </strong>
             </Link>
             <Link
               href="/admin/bank-transfers"
@@ -219,10 +239,20 @@ export default async function AdminOverview() {
             >
               <Landmark className="size-5 text-muted-foreground" />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">Bank approvals</span>
-                <span className="block text-xs text-muted-foreground">Verify pending payment requests</span>
+                <span className="block text-sm font-semibold">
+                  Bank approvals
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Verify pending payment requests
+                </span>
               </span>
-              <strong className={pendingTransfers > 0 ? "text-warning" : "text-success"}>{pendingTransfers}</strong>
+              <strong
+                className={
+                  pendingTransfers > 0 ? "text-warning" : "text-success"
+                }
+              >
+                {pendingTransfers}
+              </strong>
             </Link>
           </div>
         </div>
@@ -236,7 +266,9 @@ export default async function AdminOverview() {
               <div>
                 <p className="font-bold">System status</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Installation {installation?.installed ? "complete" : "incomplete"} ? Version {version}
+                  Installation{" "}
+                  {installation?.installed ? "complete" : "incomplete"} ?
+                  Version {version}
                 </p>
               </div>
             </div>
